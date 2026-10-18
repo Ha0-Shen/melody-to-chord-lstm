@@ -1,0 +1,28 @@
+# Local environments and notebook state
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+
+# Downloaded scores and generated experiment artifacts
+data/
+artifacts/
+wikifonia_xml_only_v1/
+*.mxl
+*.mxl.*
+*.mid
+*.midi
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+
+# Training dashboards
+runs/
+wandb/

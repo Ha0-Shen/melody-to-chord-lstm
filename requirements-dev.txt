@@ -1,0 +1,3 @@
+# Notebook interface; experimental dependencies are in requirements.txt.
+jupyterlab>=4,<5
+nbformat>=5.10,<6

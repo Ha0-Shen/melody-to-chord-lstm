@@ -1,0 +1,11 @@
+music21==10.5.0
+harte-library==0.4.5
+miditok==3.0.6.post1
+symusic==0.6.0
+lark>=1.1,<2
+torch
+scikit-learn>=1.4,<2
+matplotlib>=3.8,<4
+pandas>=2.0,<3
+numpy>=1.26,<3
+tqdm>=4.66,<5

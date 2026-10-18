@@ -1,0 +1,23 @@
+{
+  "archive": "HaoShen_COMP702_Supplementary_Material.zip",
+  "original_notebook_sha256": {
+    "01_Wikifonia_Preprocessing_and_TopN_Encoding.ipynb": "e6e79df7ec82175e04c3142451230974785fb7cd8224f66d13e02d64950c0e00",
+    "02_Causal_LSTM_Top200_Top250_Baseline.ipynb": "647d1858119e1258f5464ea705fc0e360309280110ea9b37674121a7ae56b203",
+    "03_Causal_LSTM_Top200_ClassWeighted.ipynb": "a6489df8249afd0a1b5f69522774dfc0745c3843a71e06d7fbe539a89896e1a8"
+  },
+  "changed_original_cell_indices": {
+    "01_Wikifonia_Preprocessing_and_TopN_Encoding.ipynb": [
+      7,
+      8,
+      10,
+      39
+    ],
+    "02_Causal_LSTM_Top200_Top250_Baseline.ipynb": [
+      5
+    ],
+    "03_Causal_LSTM_Top200_ClassWeighted.ipynb": [
+      5
+    ]
+  },
+  "note": "Indices refer to the original notebooks before adding the public-copy notice."
+}
