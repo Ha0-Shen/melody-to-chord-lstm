@@ -1,6 +1,6 @@
-# Validation of the public portfolio copy
+# Repository checks
 
-Checked on 18 October 2026 in a Linux environment with Python 3.12. The optional model smoke check used CPU PyTorch 2.14.1+cpu. This is the packaging-check environment, not a claim about the historical dissertation environment.
+Checked on 18 October 2026 in a Linux environment with Python 3.12. The optional model smoke check used CPU PyTorch 2.14.1+cpu. These versions describe the check environment, not the original training environment.
 
 | Check | Result | Scope |
 | --- | --- | --- |
@@ -16,4 +16,4 @@ Checked on 18 October 2026 in a Linux environment with Python 3.12. The optional
 
 The model smoke checks use random weights, small dimensions and synthetic inputs. They verify the inference interface and a training update; they are not model accuracy or musical-quality measurements.
 
-Full dependency installation, dataset download, corpus preprocessing, full training, reported test-set performance and end-to-end live latency were not reproduced for this release. No trained checkpoint was available in the supplied archive. GitHub Actions results are separate from these local checks.
+The checks did not include a full dataset download, corpus preprocessing, model training or end-to-end live latency test. No trained checkpoint is included. GitHub Actions results are separate from these local checks.

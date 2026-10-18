@@ -74,4 +74,4 @@ The notebooks implement two checks:
 
 These checks assess architectural causality and state handling. They do not prove the absence of every possible data leak or establish subjective musical quality. A model can be causal and still predict poor chords.
 
-The latency benchmark measures repeated model calls with device synchronisation where appropriate. It excludes event acquisition, tempo tracking, network transport, audio rendering and the scheduling of accompaniment changes. No benchmark measurements are included in this source release.
+The latency benchmark measures repeated model calls with device synchronisation where appropriate. It excludes event acquisition, tempo tracking, network transport, audio rendering and the scheduling of accompaniment changes. Saved benchmark outputs are not included in the repository.

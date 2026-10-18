@@ -2,9 +2,9 @@
 
 ## What is provided
 
-Three notebooks, dependency specifications, synthetic checks and documentation are included. The original notebook metadata identifies Python 3.12. The supplied README reports Google Colab with an NVIDIA Tesla T4; the archive does not contain a complete environment lock, the original ChoCo commit, a checkpoint or preserved execution outputs.
+The repository contains three notebooks, dependency specifications, synthetic checks and supporting documentation. The notebook metadata identifies Python 3.12, and the project was developed in Google Colab with an NVIDIA Tesla T4. A complete environment lock, the original ChoCo commit, trained checkpoints and saved notebook outputs are not included.
 
-Accordingly, the dependency file is an installation specification, not an exact reconstruction of the historical environment. The primary music packages retain their submitted versions; PyTorch is not pinned because its historical version is unknown. Match the PyTorch build to the intended CPU/CUDA environment. Local checks for this portfolio copy are recorded in `docs/VALIDATION.md` once run.
+The dependency file is therefore an installation guide rather than an exact reconstruction of the original environment. The main music packages keep their project versions; PyTorch is not pinned because the original version is unknown. Match the PyTorch build to the intended CPU/CUDA environment. Checks run against the repository are recorded in `docs/VALIDATION.md`.
 
 ## Installation
 

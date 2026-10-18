@@ -1,90 +1,68 @@
-# Melody-to-Chord Harmonisation with a Causal LSTM
+# Melody-to-Chord Prediction with a Causal LSTM
 
-Predicting chord labels from a symbolic melody, using only the events available up to the current time.
+This was my MSc project in Data Science and Artificial Intelligence at the University of Liverpool. I explored whether a model could predict the current chord from a symbolic melody without using notes from the future.
 
-This is my MSc project in Data Science and Artificial Intelligence at the University of Liverpool. I built a notebook-based workflow for extracting melody and harmony from MusicXML lead sheets, preparing aligned training data, and comparing causal LSTM classifiers. The intended use is an accompaniment tool that can respond while someone plays.
+The project covers the full notebook workflow: reading MusicXML lead sheets, checking and aligning melody and chord data, preparing model inputs, training LSTM classifiers and evaluating the predictions.
 
 **Python · PyTorch · pandas · NumPy · music21 · MIDITok · scikit-learn**
 
-## Project at a glance
+## Approach
 
-| Question | Approach |
+The source data comes from the Wikifonia partition of the [ChoCo dataset](https://github.com/smashub/choco). Melody notes and chord symbols are extracted from the same MusicXML part and placed on a 24-PPQ time grid.
+
+The main modelling constraint is causality. At note-on time, a live system knows the pitch but not how long the note will last. I therefore converted duration events into `NOTE_OFF` events and used a unidirectional LSTM whose hidden state can be carried between consecutive input windows. Chord labels are targets only and never appear in the model input.
+
+I compared three settings:
+
+| Experiment | Chord vocabulary | Loss |
+| --- | ---: | --- |
+| Baseline | Top 200 | Cross-entropy |
+| Baseline | Top 250 | Cross-entropy |
+| Class-weighted | Top 200 | Square-root inverse-frequency weighting |
+
+Labels outside the training-derived vocabulary are mapped to `<UNK>`. `<PAD>` is used only for padding, while `N` remains a valid no-chord label.
+
+## Repository contents
+
+| File | Description |
 | --- | --- |
-| Can a model use melody to predict the current chord without looking ahead? | A two-layer, unidirectional LSTM with a stateful inference interface. |
-| How should note events and chord targets be aligned? | A 24-pulses-per-quarter-note grid, with supervision at clock positions. |
-| How can the long tail of chord labels be handled? | Training-derived Top-200 and Top-250 vocabularies, with other labels mapped to `<UNK>`. |
-| Does class weighting help? | A separate Top-200 experiment changes the training loss while retaining the other experimental settings. |
-| How is causality checked? | Future-input perturbation and comparison of full-sequence versus chunked inference. |
+| [01_Wikifonia_Preprocessing_and_TopN_Encoding.ipynb](notebooks/01_Wikifonia_Preprocessing_and_TopN_Encoding.ipynb) | Extracts the MusicXML data, runs quality checks, creates the train/validation/test split and prepares Top-200 or Top-250 targets. |
+| [02_Causal_LSTM_Top200_Top250_Baseline.ipynb](notebooks/02_Causal_LSTM_Top200_Top250_Baseline.ipynb) | Trains and evaluates the two unweighted baseline models. |
+| [03_Causal_LSTM_Top200_ClassWeighted.ipynb](notebooks/03_Causal_LSTM_Top200_ClassWeighted.ipynb) | Repeats the Top-200 experiment with a class-weighted loss. |
+| [METHOD.md](docs/METHOD.md) | More detail on alignment, model design and evaluation. |
+| [REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) | Setup, paths and execution order. |
 
-The repository contains the research implementation. A browser application, live MIDI connection and audio accompaniment engine are outside this release.
+## Data preparation
 
-## What I implemented
+The preprocessing notebook:
 
-- **MusicXML preprocessing:** select a lead-sheet part containing both melody notes and chord symbols, expand repeats where possible, consolidate ties, normalise chord labels, and log rejected files.
-- **Data-quality checks:** audit quantisation at 12 and 24 PPQ, reject ambiguous or overlapping melodies, and keep filename variants in the same split.
-- **Training-data preparation:** select chord vocabularies using the training split only, retain `N` as a semantic no-chord label, and separate input events from gold chord targets.
-- **Causal modelling:** convert offline note durations to release events before the model sees them, train a unidirectional LSTM, and carry hidden state through consecutive evaluation windows.
-- **Evaluation:** report slot accuracy, Top-3 accuracy, F1, chord-onset accuracy, unweighted cross-entropy, perplexity and unknown-label rates, alongside a majority-chord baseline.
+- selects a lead-sheet part containing both melody and chord symbols;
+- expands repeats and consolidates tied notes;
+- rejects ambiguous chord states and overlapping melody lines;
+- audits quantisation at 12 and 24 PPQ;
+- keeps filename variants in the same data split; and
+- selects the chord vocabulary from the training split only.
 
-## How the pipeline works
+The checked-in settings use 128-dimensional embeddings, two unidirectional LSTM layers with a hidden size of 128, dropout of 0.30 and 512-token windows. Training windows overlap by 256 tokens. Validation and test windows are processed in sequence, carrying the LSTM state within each song.
 
-```mermaid
-flowchart TD
-    A["Wikifonia MusicXML"] --> B["Extract and audit melody + chords"]
-    B --> C["Group split and training-only vocabulary"]
-    C --> D["Melody event stream"]
-    C --> E["Aligned chord targets"]
-    D --> F["Unidirectional LSTM"]
-    E --> G["Masked training and evaluation"]
-    F --> G
-```
+## Evaluation
 
-### Why a causal model?
+The notebooks calculate slot accuracy, Top-3 accuracy, macro and weighted F1, chord-onset accuracy, cross-entropy, perplexity and unknown-label rates. They also include two checks for causal behaviour:
 
-A bidirectional model can use later notes when predicting an earlier chord. That is useful for offline harmonisation, but those notes have not arrived during live playing. Here, a prediction must depend only on the melody events already observed.
+1. changing later inputs must not change earlier outputs;
+2. chunked inference with carried state should match full-sequence inference.
 
-Duration tokens pose a similar problem: a completed score tells us how long a note will last, but a live system does not know that at note-on. The training notebooks therefore adapt the offline encoding to `Pitch` at note-on, `NOTE_OFF` at release, and one clock event per grid step. Gold chord labels are supervision only.
+Notebook outputs and trained checkpoints are not included in the repository. The notebooks save the metrics and figures when run, and [`scripts/collect_results.py`](scripts/collect_results.py) can combine completed runs into a comparison table.
 
-For a worked event example and the boundaries of these checks, see [method and evaluation](docs/METHOD.md).
+## Running the project
 
-## Experiments
-
-| Run | Retained chord labels | Supervised classes | Classifier outputs | Training objective |
-| --- | ---: | ---: | ---: | --- |
-| Top-200 baseline | 200 | 201 | 202 | Unweighted cross-entropy |
-| Top-250 baseline | 250 | 251 | 252 | Unweighted cross-entropy |
-| Top-200 weighted | 200 | 201 | 202 | Class-weighted cross-entropy |
-
-Supervised classes include `<UNK>`. Classifier outputs also include `<PAD>`, which is masked out of the training targets. `N` means no chord and is distinct from `<UNK>`.
-
-The checked-in settings use 128-dimensional embeddings, a hidden size of 128, two LSTM layers, dropout of 0.30 and 512-token windows. Training windows advance by 256 tokens; evaluation windows advance by 512 and retain each song's tail. See [reproducibility](docs/REPRODUCIBILITY.md) for the full configuration.
-
-### Results and evidence
-
-The supplied dissertation archive contains source notebooks with cleared outputs. It does **not** contain the final metric files, trained checkpoints or result figures. This source release therefore makes no numerical claim about predictive performance or measured latency.
-
-The notebooks generate those artifacts when run. [The results directory](results/README.md) explains which files are needed to publish a traceable comparison. The training notebooks expect an accepted corpus of 5,022 songs; this is a compatibility check in the code, rather than a corpus count independently reproduced for this release.
-
-## Explore the code
-
-| File | Purpose |
-| --- | --- |
-| [01 · Preprocessing and encoding](notebooks/01_Wikifonia_Preprocessing_and_TopN_Encoding.ipynb) | MusicXML extraction, quality control, group splits and training-only vocabulary selection. |
-| [02 · Baseline experiments](notebooks/02_Causal_LSTM_Top200_Top250_Baseline.ipynb) | Unweighted Top-200 and Top-250 training, stateful testing and comparison. |
-| [03 · Weighted experiment](notebooks/03_Causal_LSTM_Top200_ClassWeighted.ipynb) | Top-200 class-weighted training and comparison with the unweighted run. |
-| [Method and evaluation](docs/METHOD.md) | Event timing, model design, metric definitions and limitations. |
-| [Reproducibility](docs/REPRODUCIBILITY.md) | Installation, data access, paths and execution order. |
-| [Changes from the submission](docs/CHANGES_FROM_SUBMISSION.md) | What was changed when preparing this public copy. |
-
-## Getting started
-
-The notebooks were written for Python 3.12 and Google Colab. For a local environment, run these commands from the repository root:
+The notebooks were written for Python 3.12 and Google Colab. For a local environment:
 
 ```bash
 python -m venv .venv
 ```
 
-Activate the environment (`.venv\Scripts\Activate.ps1` in Windows PowerShell, or `source .venv/bin/activate` on macOS/Linux), then run:
+Activate the environment with `.venv\Scripts\Activate.ps1` in Windows PowerShell or `source .venv/bin/activate` on macOS/Linux, then run:
 
 ```bash
 python -m pip install -r requirements.txt -r requirements-dev.txt
@@ -93,21 +71,17 @@ python -m unittest discover -s tests -v
 python -m jupyterlab
 ```
 
-The checks use synthetic inputs and do not download the dataset or train a model. In JupyterLab, follow the [execution sequence](docs/REPRODUCIBILITY.md#execution-sequence): preprocessing for each vocabulary, both baseline runs, then the weighted run. GPU-backed Colab is the practical starting point for full training.
+The full notebook order and data paths are described in [REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md). Full training is best run with a GPU.
 
-## Limitations and next steps
+## Limitations
 
-- Melody does not determine a unique musical accompaniment. Agreement with one annotated chord sequence is only one measure of usefulness.
-- Rare chords are merged into `<UNK>`. This reduces label sparsity but loses musical detail; a live product would need a fallback for unknown predictions.
-- Filename-based song grouping prevents variants with matching normalised filenames from crossing splits. It does not prove that every duplicate arrangement or composition has been found.
-- Chord-onset evaluation follows changes in the mapped labels. A transition can disappear when both original chords become `<UNK>`.
-- The notebooks contain a model-only latency benchmark. It excludes input capture, network, audio scheduling and the user interface.
-- A listening study, transposition augmentation, broader genre coverage and an end-to-end live prototype would be useful further work.
+- A melody can support more than one reasonable accompaniment, so matching one annotated chord sequence does not fully measure musical quality.
+- Grouping by normalised filenames prevents known score variants from crossing splits, but does not identify every possible duplicate arrangement.
+- Rare chords are merged into `<UNK>`, which loses some harmonic detail.
+- The latency code measures the PyTorch model only; it does not cover MIDI input, audio scheduling or a user interface.
 
-## Data and acknowledgements
+## Data and licences
 
-Wikifonia source files and chord-conversion utilities are obtained from [ChoCo](https://github.com/smashub/choco). This project extracts both melody and annotated chords from the same MusicXML file; it does not use JAMS annotations as input. Raw scores, generated datasets and trained weights are excluded from Git.
-
-See [third-party acknowledgements](THIRD_PARTY.md) for upstream links and licence information. This repository does not apply a new software licence to the project author's code.
+Wikifonia files and chord-conversion utilities are obtained from [ChoCo](https://github.com/smashub/choco). Raw scores, generated datasets and trained weights are excluded from Git. See [THIRD_PARTY.md](THIRD_PARTY.md) for the upstream data and licence information.
 
 **Author:** Hao Shen Yang

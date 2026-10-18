@@ -16,4 +16,4 @@ The notebooks depend on music21, MIDITok, symusic, harte-library, Lark, PyTorch,
 
 ## This project's code
 
-The supplied supplementary material did not specify a licence for the author's own code. No new licence is assigned in this portfolio copy. Public visibility and an open-source licence are separate decisions. Select a licence deliberately if redistribution permissions are to be granted later.
+No software licence has been added to this repository. Public visibility does not grant permission to redistribute the project code.
